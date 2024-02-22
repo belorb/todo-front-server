@@ -30,7 +30,7 @@ const SImage = styled.img`
     height: 75px;
 `;
 export default function Home() {
-    const [orderBy, setOrderBy] = useState<Ordering>(Ordering.DATE_ASC)
+    const [orderBy, setOrderBy] = useState<Ordering | undefined>(Ordering.DATE_ASC)
     const [filterType, setFilterType] = useState<TodoTypes[] | undefined>()
     const [filterIsDone, setFilterIsDone] = useState<boolean | undefined>()
     return (

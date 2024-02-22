@@ -55,10 +55,11 @@ const SFormControl = styled(FormControl)`
 export default function TodoList() {
     const navigate = useNavigate();
     const {orderBy, setOrderBy, filterType, setFilterType, filterIsDone, setFilterIsDone} = useFilter()
-    const TodoListResponse = useQuery<{getTodoList: Todo[]}>(GET_TODO_LIST, {variables: {orderBy, filters: {types: filterType, isDone: filterIsDone}}});
-    const [updateStatus, UpdateStatusResponse] = useMutation(UPDATE_TODO_STATUS, {
-        refetchQueries: [GET_TODO_LIST],
+    const TodoListResponse = useQuery<{getTodoList: Todo[]}>(GET_TODO_LIST, {
+        variables: {orderBy, filters: {types: filterType, isDone: filterIsDone}},
+        fetchPolicy: "network-only"
     });
+    const [updateStatus, UpdateStatusResponse] = useMutation(UPDATE_TODO_STATUS);
 
     if (TodoListResponse.loading || UpdateStatusResponse.loading) return <Loading/>;
     if (TodoListResponse.error || UpdateStatusResponse.error) return <ServerError/>;
@@ -72,7 +73,7 @@ export default function TodoList() {
         }
         else
             setFilterType(
-            typeof value === 'string' ? value.split(',') : value,
+            typeof value === 'string' ? value.split(',') as TodoTypes[] : value,
         );
     };
 
@@ -89,11 +90,11 @@ export default function TodoList() {
         return value ? 'Fait' : 'Pas fait'
     }
 
-    const handleChangeFilterDateOrder = (event: SelectChangeEvent<Ordering | undefined>) => {
+    const handleChangeFilterDateOrder = (event: SelectChangeEvent<Ordering>) => {
         const {
             target: { value },
         } = event;
-        setOrderBy(value)
+        setOrderBy(value as Ordering)
     }
 
     const renderValueDateOrder = (value: Ordering | undefined) => {
@@ -121,7 +122,7 @@ export default function TodoList() {
                     >
                         {Object.values(TodoTypes).map((type) => (
                             <MenuItem key={type} value={type}>
-                                <Checkbox checked={filterType?.indexOf(type) > -1}/>
+                                <Checkbox checked={filterType && filterType.indexOf(type) > -1}/>
                                 <ListItemText primary={type}/>
                             </MenuItem>
                         ))}
@@ -177,15 +178,23 @@ export default function TodoList() {
                     </TableHead>
                     <TableBody>
                         {TodoListResponse.data?.getTodoList?.map(todo => (
-                            <StyleTableRow key={todo.id} hover onClick={(event) => navigate(`/detail/${todo.id}`)}>
-                                {TableColumn.map( (e, index) => (
+                            <StyleTableRow key={todo.id} hover onClick={() => navigate(`/detail/${todo.id}`)}>
+                                {TableColumn.map( (e, index) => {
+                                    const a = todo[e.champs]
+                                        return (
                                     <TableCell align={index === 0 ? "left" : "center"} key={e.champs}>
-                                        {(typeof todo[e.champs] !== "boolean") ?
-                                            todo[e.champs] :
-                                            <Checkbox checked={todo[e.champs]} onClick={(event) => event.stopPropagation()} onChange={(event) => updateStatus({ variables: { TodoId: todo.id, NewStatus: event.target.checked } })}/>
-                                            }
+                                        {typeof a === "boolean" ?
+                                            <Checkbox checked={a}
+                                                      onClick={
+                                                          (event) => event.stopPropagation()
+                                                      }
+                                                      onChange={
+                                                          (event) => updateStatus({ variables: { TodoId: todo.id, NewStatus: event.target.checked } })
+                                                      }/> :
+                                            `${todo[e.champs]}`
+                                        }
                                     </TableCell>
-                                ))}
+                                )})}
                             </StyleTableRow>
                         ))}
                     </TableBody>

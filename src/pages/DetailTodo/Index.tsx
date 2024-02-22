@@ -2,18 +2,17 @@ import {useMutation, useQuery} from "@apollo/client";
 import Loading from "../../components/Loading.tsx";
 import ServerError from "../../components/ServerError.tsx";
 import {GET_TODO_DETAIL} from "../../graphql/Query/getDetailTodoById.ts";
-import {Navigate, useNavigate, useParams} from "react-router-dom";
+import {Link, Navigate, useParams} from "react-router-dom";
 import {Checkbox, List, ListItem, ListItemText, Typography} from "@mui/material";
 import {Todo} from "../../utils/type.ts";
 import {UPDATE_TODO_STATUS} from "../../graphql/Mutation/updateTodoStatusById.ts";
-import {GET_TODO_LIST} from "../../graphql/Query/getAllTodo.ts";
 import styled from "@emotion/styled";
 
-interface Params {
-    id: number
+type Params = {
+    id: string
 }
 
-const SButton = styled.button`
+const SLink = styled(Link)`
     align-self: flex-start;
     margin-left: 24px;
 `;
@@ -27,54 +26,58 @@ const Container = styled.div`
 `;
 export default function DetailTodo() {
     const { id } = useParams<Params>();
-    const navigate = useNavigate();
-
-    if (!id) return <Navigate to="/"/>
 
     const Todo = useQuery<{getTodoById: Todo}>(GET_TODO_DETAIL, {
+        skip: id === undefined,
         variables: { TodoId: id },
     });
-    const [updateStatus, UpdateStatusResponse] = useMutation(UPDATE_TODO_STATUS, {
-        refetchQueries: [GET_TODO_LIST],
-    });
+    const [updateStatus, UpdateStatusResponse] = useMutation(UPDATE_TODO_STATUS);
 
+    if (!id) return <Navigate to="/"/>
     if (Todo.loading || UpdateStatusResponse.loading) return <Loading/>;
     if (Todo.error || UpdateStatusResponse.error) return <ServerError/>;
 
+    const currentTodo = Todo.data?.getTodoById;
+
     return (
         <Container>
-            <SButton onClick={() => navigate("/")}>
+            <SLink to={"/"}>
                 Retour
-            </SButton>
+            </SLink>
             <Typography component={"h1"} variant="h2">
                 {Todo.data?.getTodoById?.title}
             </Typography>
-            <List>
-                {Object.keys(Todo.data?.getTodoById).map(e => (
+            {currentTodo && <List>
+                {Object.entries(currentTodo).map(([key, value]) => (
                     <>
-                        {typeof Todo.data?.getTodoById[e] !== "boolean" ? (
-                            <ListItem key={e}>
+                        {typeof value !== "boolean" ? (
+                            <ListItem key={key}>
                                 <ListItemText>
-                                    {`${e} : ${Todo.data?.getTodoById[e]}`}
+                                    {`${key} : ${value}`}
                                 </ListItemText>
                             </ListItem>
                         ) : (
-                            <ListItem key={e}
+                            <ListItem key={key}
                                       secondaryAction={
-                                        <Checkbox
-                                            edge="end"
-                                            onChange={(event) => updateStatus({ variables: { TodoId: Todo.data?.getTodoById.id, NewStatus: event.target.checked } })}
-                                            checked={Todo.data?.getTodoById[e]}
-                                        />}
+                                          <Checkbox
+                                              edge="end"
+                                              onChange={(event) => updateStatus({
+                                                  variables: {
+                                                      TodoId: Todo.data?.getTodoById.id,
+                                                      NewStatus: event.target.checked
+                                                  }
+                                              })}
+                                              checked={value}
+                                          />}
                             >
                                 <ListItemText>
-                                    {`${e} : `}
+                                    {`${key} : `}
                                 </ListItemText>
                             </ListItem>
                         )}
                     </>
                 ))}
-            </List>
+            </List>}
         </Container>
     )
 }

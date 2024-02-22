@@ -1,4 +1,6 @@
-export const TableColumn = [
+import {Todo} from "./type.ts";
+
+export const TableColumn : {champs: keyof Todo, title: string}[] = [
     {
         champs: "title",
         title: "Titre",

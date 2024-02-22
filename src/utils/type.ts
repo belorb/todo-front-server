@@ -20,10 +20,10 @@ export enum Ordering {
 }
 
 export type ContextFilterType = {
-    orderBy: Ordering | null,
-    setOrderBy: (Ordering) => void,
-    filterType: TodoTypes[] | null,
-    setFilterType: (TodoTypes) => void,
-    filterIsDone: boolean | null,
-    setFilterIsDone: (boolean) => void
+    orderBy: Ordering | undefined,
+    setOrderBy: (arg0: Ordering | undefined) => void,
+    filterType: TodoTypes[] | undefined,
+    setFilterType: (arg0 : TodoTypes[] | undefined) => void,
+    filterIsDone: boolean | undefined,
+    setFilterIsDone: (arg0 : boolean | undefined) => void
 }
