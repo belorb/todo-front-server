@@ -21,6 +21,14 @@ yarn install
 npm install
 ```
 
+### Evironement Variable
+
+create a .env file with a variable name VITE_BACKEND_URL and the value is the backend url
+
+```
+echo "VITE_BACKEND_URL=http://localhost:4000" > .env
+```
+
 ## Execution
 
 Once the dependencies are installed, you can start the application by running the following command:
